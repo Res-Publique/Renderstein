@@ -1,8 +1,11 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "objparser.h"
 
 #include <QFileDialog>
 #include <QVBoxLayout>
+#include <fstream>
+#include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -37,9 +40,17 @@ void MainWindow::handleButton() {
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::AnyFile);
     QStringList fileNames;
-    if (dialog.exec())
+    if (dialog.exec()) {
         fileNames = dialog.selectedFiles();
+    }
+
     if (fileNames.size() > 0) {
-        label->setText(fileNames[0]);
+        auto file = fileNames[0].toStdString();
+        std::ifstream stream;
+        stream.open(file);
+        stream.sync_with_stdio(false);
+        auto parser = ObjParser();
+        auto obj = parser.parse(stream);
+        std::cout << "test";
     }
 }
