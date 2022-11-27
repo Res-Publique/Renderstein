@@ -66,16 +66,13 @@ void OGLWidget::paintGL()
         } else {
             glBegin(GL_POLYGON);
         }
-        for (auto i = 0; i < face.v.size(); i++) {
-            auto vertex = verticies[face.v[i]];
-            auto normal = normals[face.vn[i]];
+        for (int i = face.v.size() - 1; i >= 0; i--) {
+            auto vertex = verticies[face.v[i] - 1];
+            auto normal = normals[face.vn[i] - 1];
             glVertex3f(vertex.x, vertex.y, vertex.z);
             auto r = normal.x;
             auto g = normal.y;
             auto b = normal.z;
-//            auto r = generator.generateDouble();
-//            auto g = generator.generateDouble();
-//            auto b = generator.generateDouble();
             glColor3f(r, g, b);
         }
         glEnd();
