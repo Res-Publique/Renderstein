@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "oglwidget.h"
 #include "qlabel.h"
 #include <QPushButton>
 #include <QStackedWidget>
@@ -20,7 +21,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    QLabel *label;
+    OGLWidget *oglwidget;
     QPushButton *button;
     QStackedWidget *stack;
     void handleButton();

@@ -12,10 +12,16 @@ class ObjParserModel
 {
 public:
     ObjParserModel();
+    ObjParserModel(ObjParserModel &&model);
     void addVertex(vec3 &&v);
     void addVertexNormal(vec3 &&v);
     void addVertexTexture(vec2 &&v);
     void addFace(ObjFace &&face);
+
+    std::vector<vec3> getVerticies();
+    std::vector<vec3> getVertexNormals();
+    std::vector<vec2> getVertexTextures();
+    std::vector<ObjFace> getFaces();
 private:
     std::vector<vec3> verticies;
     std::vector<vec3> vertexNormals;

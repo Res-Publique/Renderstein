@@ -11,10 +11,14 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGL)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL)
 
 set(PROJECT_SOURCES
+    oglwidget.h oglwidget.cpp
+    simplerenderwidget.h simplerenderwidget.cpp
     objface.h objface.cpp
     vec2.h vec2.cpp
     vec3.h vec3.cpp
@@ -49,7 +53,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(Renderstein PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(Renderstein PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 
 set_target_properties(Renderstein PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

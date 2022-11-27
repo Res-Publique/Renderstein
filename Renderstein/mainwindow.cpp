@@ -18,15 +18,16 @@ MainWindow::MainWindow(QWidget *parent)
     button = new QPushButton();
     connect(button, &QPushButton::released, this, &MainWindow::handleButton);
 
-    label = new QLabel();
+    oglwidget = new OGLWidget();
 
     stack->addWidget(button);
-    stack->addWidget(label);
+    stack->addWidget(oglwidget);
 
     QVBoxLayout *layout = new QVBoxLayout;
-    stack->setLayout(layout);
+//    stack->setLayout(layout);
+    stack->setFixedSize(this->frameSize());
+    button->setFixedSize(this->frameSize());
     layout->addWidget(stack);
-    label->setText("qweq");
 }
 
 MainWindow::~MainWindow()
@@ -50,7 +51,7 @@ void MainWindow::handleButton() {
         stream.open(file);
         stream.sync_with_stdio(false);
         auto parser = ObjParser();
-        auto obj = parser.parse(stream);
-        std::cout << "test";
+        auto obj = std::make_shared<ObjParserModel>(parser.parse(stream));
+        oglwidget->setModel(obj);
     }
 }
