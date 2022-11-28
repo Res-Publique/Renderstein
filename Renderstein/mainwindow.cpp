@@ -13,21 +13,17 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    stack = new QStackedWidget(this);
-
-    button = new QPushButton();
+    button = new QPushButton;
     connect(button, &QPushButton::released, this, &MainWindow::handleButton);
+    button->setText("Open");
+    button->setFixedSize(100, 100);
 
-    oglwidget = new OGLWidget();
+    oglwidget = new OGLWidget;
 
+    stack = new QStackedWidget(this);
     stack->addWidget(button);
     stack->addWidget(oglwidget);
-
-    QVBoxLayout *layout = new QVBoxLayout;
-//    stack->setLayout(layout);
     stack->setFixedSize(this->frameSize());
-    button->setFixedSize(this->frameSize());
-    layout->addWidget(stack);
 }
 
 MainWindow::~MainWindow()
@@ -38,20 +34,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::handleButton() {
     stack->setCurrentIndex(1);
-    QFileDialog dialog(this);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    QStringList fileNames;
-    if (dialog.exec()) {
-        fileNames = dialog.selectedFiles();
-    }
+    auto fileNames = QFileDialog::getOpenFileNames(this, "Select a file to open...", QDir::homePath());
 
     if (fileNames.size() > 0) {
         auto file = fileNames[0].toStdString();
-        std::ifstream stream;
-        stream.open(file);
+        std::ifstream stream(file);
         stream.sync_with_stdio(false);
         auto parser = ObjParser();
         auto obj = std::make_shared<ObjParserModel>(parser.parse(stream));
         oglwidget->setModel(obj);
+        oglwidget->startTimer();
     }
 }

@@ -1,7 +1,7 @@
 #ifndef OBJMODEL_H
 #define OBJMODEL_H
 
-#include <ObjParserModel.h>
+#include <objparsermodel.h>
 
 class ObjModel
 {

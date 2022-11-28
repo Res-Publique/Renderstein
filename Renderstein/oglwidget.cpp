@@ -9,13 +9,6 @@
 OGLWidget::OGLWidget(QWidget *parent)
     : QOpenGLWidget(parent)
 {
-    model = nullptr;
-    auto timer = new QTimer();
-    timer->setInterval(30);
-    connect(timer, &QTimer::timeout, this, [this]() {
-        this->update();
-    });
-    timer->start(0);
 }
 
 OGLWidget::~OGLWidget()
@@ -25,6 +18,15 @@ OGLWidget::~OGLWidget()
 void OGLWidget::setModel(std::shared_ptr<ObjParserModel> model)
 {
     this->model = model;
+}
+
+void OGLWidget::startTimer() {
+    auto timer = new QTimer(this);
+    timer->setInterval(30);
+    connect(timer, &QTimer::timeout, this, [this]() {
+        this->update();
+    });
+    timer->start(0);
 }
 
 void OGLWidget::initializeGL()
