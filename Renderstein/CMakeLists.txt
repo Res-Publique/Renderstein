@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenGL REQUIRED)
 #find_package(GLUT REQUIRED)
+find_package(glm REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL)
 
@@ -53,7 +54,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(Renderstein PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES} )
+target_link_libraries(Renderstein PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES} glm::glm)
 #${GLUT_LIBRARY}
 set_target_properties(Renderstein PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
