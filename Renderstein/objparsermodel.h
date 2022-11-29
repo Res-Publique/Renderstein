@@ -3,8 +3,8 @@
 
 
 #include "objface.h"
-#include "vec2.h"
-#include "vec3.h"
+#include "vec2generic.h"
+#include "vec3generic.h"
 
 #include <vector>
 

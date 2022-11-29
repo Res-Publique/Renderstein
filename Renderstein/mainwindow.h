@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include "oglwidget.h"
-#include "qlabel.h"
 #include <QPushButton>
 #include <QStackedWidget>
 

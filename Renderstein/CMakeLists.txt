@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
+#find_package(GLUT REQUIRED)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL)
 
@@ -20,8 +20,8 @@ set(PROJECT_SOURCES
     oglwidget.h oglwidget.cpp
     simplerenderwidget.h simplerenderwidget.cpp
     objface.h objface.cpp
-    vec2.h vec2.cpp
-    vec3.h vec3.cpp
+    vec3generic.h vec3generic.cpp
+    vec2generic.h vec2generic.cpp
     objparsermodel.h objparsermodel.cpp
     objmodel.h objmodel.cpp
     objparser.h objparser.cpp
@@ -53,8 +53,8 @@ else()
     endif()
 endif()
 
-target_link_libraries(Renderstein PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-
+target_link_libraries(Renderstein PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt5::OpenGL ${OPENGL_LIBRARIES} )
+#${GLUT_LIBRARY}
 set_target_properties(Renderstein PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
