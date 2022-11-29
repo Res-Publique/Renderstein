@@ -5,10 +5,10 @@
 
 #include <QWidget>
 #include <QOpenGLWidget>
+#include <QOpenGLExtraFunctions>
 #include <GL/glu.h>
-#include <GL/gl.h>
 
-class OGLWidget : public QOpenGLWidget
+class OGLWidget : public QOpenGLWidget, protected QOpenGLExtraFunctions
 {
     Q_OBJECT
 public:
@@ -22,6 +22,11 @@ protected:
     void resizeGL(int w, int h);
     void paintGL();
     std::shared_ptr<ObjParserModel> model = nullptr;
+
+private:
+    GLuint shaderProgram;
+    GLuint vao, vbo, ebo;
+    size_t eboSize;
 };
 
 #endif // OGLWIDGET_H
