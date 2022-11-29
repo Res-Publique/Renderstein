@@ -28,22 +28,22 @@ void ObjParserModel::addFace(ObjFace &&face) {
     faces.emplace_back(face);
 }
 
-std::vector<vec3> ObjParserModel::getVerticies()
+const std::vector<vec3>& ObjParserModel::getVerticies()
 {
     return verticies;
 }
 
-std::vector<vec3> ObjParserModel::getVertexNormals()
+const std::vector<vec3>& ObjParserModel::getVertexNormals()
 {
     return vertexNormals;
 }
 
-std::vector<vec2> ObjParserModel::getVertexTextures()
+const std::vector<vec2>& ObjParserModel::getVertexTextures()
 {
     return vertexTextures;
 }
 
-std::vector<ObjFace> ObjParserModel::getFaces()
+const std::vector<ObjFace>& ObjParserModel::getFaces()
 {
     return faces;
 }
