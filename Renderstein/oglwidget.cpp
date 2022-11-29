@@ -7,34 +7,16 @@
 #include <iostream>
 
 auto getVbo(const std::vector<vec3>& vertices, const std::vector<vec3>& normals) {
-    std::vector<float> buffer;
+    float *buffer = new float[vertices.size() * 6];
 
     for (size_t i = 0; i < vertices.size(); ++i) {
-        buffer.push_back(vertices[i].x);
-        buffer.push_back(vertices[i].y);
-        buffer.push_back(vertices[i].z);
-        buffer.push_back(normals[i].x);
-        buffer.push_back(normals[i].y);
-        buffer.push_back(normals[i].z);
+        auto base = i * 6;
+        memcpy(&buffer[base], &vertices[i], sizeof(float) * 3);
+        memcpy(&buffer[base + 3], &normals[i], sizeof(float) * 3);
     }
 
     return buffer;
 }
-
-auto getEbo(const std::vector<ObjFace>& faces) {
-    std::vector<GLuint> buffer;
-
-    for (const auto& face: faces) {
-        for (size_t j = 2; j < face.v.size(); ++j) {
-            buffer.push_back(face.v[0] - 1);
-            buffer.push_back(face.v[j - 1] - 1);
-            buffer.push_back(face.v[j] - 1);
-        }
-    }
-
-    return buffer;
-}
-
 
 OGLWidget::OGLWidget(QWidget *parent)
     : QOpenGLWidget(parent)
@@ -45,7 +27,7 @@ OGLWidget::~OGLWidget()
 {
 }
 
-void OGLWidget::setModel(std::shared_ptr<ObjParserModel> model)
+void OGLWidget::setModel(std::shared_ptr<ObjModel> model)
 {
     this->model = model;
     glGenBuffers(1, &vbo);
@@ -53,12 +35,14 @@ void OGLWidget::setModel(std::shared_ptr<ObjParserModel> model)
 
     auto vboBuffer = getVbo(model->getVerticies(), model->getVertexNormals());
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vboBuffer.size() * sizeof(float), vboBuffer.data(), GL_STATIC_DRAW);
+    auto vboBufferSize = model->getVerticies().size() * 6 * sizeof(float);
+    glBufferData(GL_ARRAY_BUFFER, vboBufferSize, vboBuffer, GL_STATIC_DRAW);
 
-    auto eboBuffer = getEbo(model->getFaces());
+    auto eboBuffer = model->getTriangles();
     eboSize = eboBuffer.size();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, eboSize * sizeof(GLuint), eboBuffer.data(), GL_STATIC_DRAW);
+    delete[] vboBuffer;
 }
 
 void OGLWidget::startTimer() {
@@ -76,14 +60,14 @@ static const char* vertexShaderSource = "#version 420 core\n"
                                         "out vec3 outColor;\n"
                                         "void main() {\n"
                                         "    gl_Position = vec4(pos, 1.0);\n"
-                                        "    outColor = color;\n"
+                                        "    outColor = color + vec3(pos.y * 0.5);\n"
                                         "}\0";
 
 static const char* fragmentShaderSource = "#version 420 core\n"
                                           "out vec4 fragColor;\n"
                                           "in vec3 outColor;\n"
                                           "void main() {\n"
-                                          "    fragColor = vec4(outColor, 1.0f);\n"
+                                          "    fragColor = vec4(outColor * vec3(1., 0., 0.), 1.0f);\n"
                                           "}\0";
 
 void OGLWidget::initializeGL()

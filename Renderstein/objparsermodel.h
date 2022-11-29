@@ -18,10 +18,10 @@ public:
     void addVertexTexture(vec2 &&v);
     void addFace(ObjFace &&face);
 
-    const std::vector<vec3>& getVerticies();
-    const std::vector<vec3>& getVertexNormals();
-    const std::vector<vec2>& getVertexTextures();
-    const std::vector<ObjFace>& getFaces();
+    const std::vector<vec3>& getVerticies() const;
+    const std::vector<vec3>& getVertexNormals() const;
+    const std::vector<vec2>& getVertexTextures() const;
+    const std::vector<ObjFace>& getFaces() const;
 private:
     std::vector<vec3> verticies;
     std::vector<vec3> vertexNormals;

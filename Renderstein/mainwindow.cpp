@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "objparser.h"
+#include "objmodel.h"
 
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -41,7 +42,8 @@ void MainWindow::handleButton() {
         std::ifstream stream(file);
         stream.sync_with_stdio(false);
         auto parser = ObjParser();
-        auto obj = std::make_shared<ObjParserModel>(parser.parse(stream));
+        auto parserObj = parser.parse(stream);
+        auto obj = std::make_shared<ObjModel>(parserObj);
         oglwidget->setModel(obj);
         oglwidget->startTimer();
     }

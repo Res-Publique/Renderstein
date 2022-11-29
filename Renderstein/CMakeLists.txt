@@ -17,6 +17,7 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGL)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL)
 
 set(PROJECT_SOURCES
+    triangle.h triangle.cpp
     oglwidget.h oglwidget.cpp
     simplerenderwidget.h simplerenderwidget.cpp
     objface.h objface.cpp
