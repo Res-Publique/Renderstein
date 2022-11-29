@@ -6,8 +6,13 @@
 #include <QTimer>
 #include <iostream>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 auto getVbo(const std::vector<vec3>& vertices, const std::vector<vec3>& normals) {
     std::vector<float> buffer;
+    buffer.reserve(6 * vertices.size());
 
     for (size_t i = 0; i < vertices.size(); ++i) {
         buffer.push_back(vertices[i].x);
@@ -74,8 +79,10 @@ static const char* vertexShaderSource = "#version 420 core\n"
                                         "layout (location = 0) in vec3 pos;\n"
                                         "layout (location = 1) in vec3 color;\n"
                                         "out vec3 outColor;\n"
+                                        "uniform mat4 projection;\n"
+                                        "uniform mat4 view;\n"
                                         "void main() {\n"
-                                        "    gl_Position = vec4(pos, 1.0);\n"
+                                        "    gl_Position = projection * view * vec4(pos, 1.0f);\n"
                                         "    outColor = color;\n"
                                         "}\0";
 
@@ -128,6 +135,11 @@ void OGLWidget::initializeGL()
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    glUseProgram(shaderProgram);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)size().width()/size().height(), 0.01f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+                       1, GL_FALSE, glm::value_ptr(projection));
 }
 
 void OGLWidget::paintGL()
@@ -141,10 +153,6 @@ void OGLWidget::paintGL()
     auto t = sin(time / 1000.f);
     auto t2 = cos(time / 1000.f);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(t2,t,5,0,0,0,0,1,0);
-
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
@@ -157,41 +165,20 @@ void OGLWidget::paintGL()
     glEnableVertexAttribArray(1);
 
     glUseProgram(shaderProgram);
-    glDrawElements(GL_TRIANGLES, eboSize, GL_UNSIGNED_INT, 0);
+    glm::mat4 view = glm::lookAt(glm::vec3(t2, t, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+                       1, GL_FALSE, glm::value_ptr(view));
 
-    /*auto verticies = model->getVerticies();
-    auto normals = model->getVertexNormals();
-    auto faces = model->getFaces();
-    auto generator = QRandomGenerator();
-    generator.seed(time);
-    for (auto &&face: faces) {
-        if (face.v.size() <= 3) {
-            glBegin(GL_TRIANGLES);
-        } else if (face.v.size() == 4) {
-            glBegin(GL_QUADS);
-        } else {
-            glBegin(GL_POLYGON);
-        }
-        for (int i = face.v.size() - 1; i >= 0; i--) {
-            auto vertex = verticies[face.v[i] - 1];
-            //auto normal = normals[face.vn[i] - 1];
-            glVertex3f(vertex.x, vertex.y, vertex.z);
-            auto r = normal.x;
-            auto g = normal.y;
-            auto b = normal.z;
-            glColor3f(r, g, b);
-        }
-        glEnd();
-    }*/
+    glDrawElements(GL_TRIANGLES, eboSize, GL_UNSIGNED_INT, 0);
 }
 
 void OGLWidget::resizeGL(int w, int h)
 {
-    glViewport(0,0,w,h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45, (float)w/h, 0.01, 100.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(0,0,5,0,0,0,0,1,0);
+    glUseProgram(shaderProgram);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)w/h, 0.01f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+                       1, GL_FALSE, glm::value_ptr(projection));
+    glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+                       1, GL_FALSE, glm::value_ptr(view));
 }
