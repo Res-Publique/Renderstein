@@ -7,7 +7,10 @@
 #include <QWidget>
 #include <QOpenGLWidget>
 #include <QOpenGLExtraFunctions>
+#include <QLabel>
 #include <GL/glu.h>
+
+#define MONKEYS_COUNT 10
 
 class OGLWidget : public QOpenGLWidget, protected QOpenGLExtraFunctions
 {
@@ -25,9 +28,11 @@ protected:
     std::shared_ptr<ObjModel> model = nullptr;
 
 private:
+    QLabel *label;
     GLuint shaderProgram;
-    GLuint vao, vbo, ebo;
-    size_t eboSize;
+    GLuint vao[MONKEYS_COUNT], vbo[MONKEYS_COUNT], ebo[MONKEYS_COUNT];
+    size_t eboSize[MONKEYS_COUNT];
+    float t;
 };
 
 #endif // OGLWIDGET_H

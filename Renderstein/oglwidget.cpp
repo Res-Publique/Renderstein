@@ -5,14 +5,23 @@
 #include <QGLFormat>
 #include <QTimer>
 #include <iostream>
+#include <QString>
 
-auto getVbo(const std::vector<vec3>& vertices, const std::vector<vec3>& normals) {
-    float *buffer = new float[vertices.size() * 6];
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+auto getVbo(const std::vector<vec3>& vertices, const std::vector<vec3>& normals, vec3 shift) {
+    std::vector<float> buffer;
+    buffer.reserve(6 * vertices.size());
 
     for (size_t i = 0; i < vertices.size(); ++i) {
-        auto base = i * 6;
-        memcpy(&buffer[base], &vertices[i], sizeof(float) * 3);
-        memcpy(&buffer[base + 3], &normals[i], sizeof(float) * 3);
+        buffer.push_back(vertices[i].x + shift.x);
+        buffer.push_back(vertices[i].y + shift.y);
+        buffer.push_back(vertices[i].z + shift.z);
+        buffer.push_back(normals[i].x);
+        buffer.push_back(normals[i].y);
+        buffer.push_back(normals[i].z);
     }
 
     return buffer;
@@ -21,6 +30,9 @@ auto getVbo(const std::vector<vec3>& vertices, const std::vector<vec3>& normals)
 OGLWidget::OGLWidget(QWidget *parent)
     : QOpenGLWidget(parent)
 {
+    label = new QLabel(this);
+    label->setStyleSheet("QLabel { background-color : red; color : blue; }");
+    label->setFixedSize(QSize(50, 14));
 }
 
 OGLWidget::~OGLWidget()
@@ -30,40 +42,50 @@ OGLWidget::~OGLWidget()
 void OGLWidget::setModel(std::shared_ptr<ObjModel> model)
 {
     this->model = model;
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
+    glGenBuffers(MONKEYS_COUNT, vbo);
+    glGenBuffers(MONKEYS_COUNT, ebo);
 
-    auto vboBuffer = getVbo(model->getVerticies(), model->getVertexNormals());
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    auto vboBufferSize = model->getVerticies().size() * 6 * sizeof(float);
-    glBufferData(GL_ARRAY_BUFFER, vboBufferSize, vboBuffer, GL_STATIC_DRAW);
+    for (auto i = 0; i < MONKEYS_COUNT; i++) {
+        vec3 shift;
+        shift.x = 0;
+        shift.y = i * 0.01f;
+        shift.z = i * -0.1f;
+        auto vboBuffer = getVbo(model->getVerticies(), model->getVertexNormals(), shift);
 
-    auto eboBuffer = model->getTriangles();
-    eboSize = eboBuffer.size();
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, eboSize * sizeof(GLuint), eboBuffer.data(), GL_STATIC_DRAW);
-    delete[] vboBuffer;
+//        auto vboBuffer = getVbo(model->getVerticies(), model->getVertexNormals());
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
+        auto vboBufferSize = model->getVerticies().size() * 6 * sizeof(float);
+        glBufferData(GL_ARRAY_BUFFER, vboBufferSize, vboBuffer.data(), GL_STATIC_DRAW);
+
+        auto eboBuffer = model->getTriangles();
+        eboSize[i] = eboBuffer.size() * 3;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[i]);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, eboSize[i] * sizeof(GLuint), eboBuffer.data(), GL_STATIC_DRAW);
+    }
+
+    glGenVertexArrays(MONKEYS_COUNT, vao);
 }
 
 void OGLWidget::startTimer() {
     auto timer = new QTimer(this);
-    timer->setInterval(30);
     connect(timer, &QTimer::timeout, this, [this]() {
         this->update();
     });
     timer->start(0);
 }
 
-static const char* vertexShaderSource = "#version 420 core\n"
+static const char *vertexShaderSource = "#version 420 core\n"
                                         "layout (location = 0) in vec3 pos;\n"
                                         "layout (location = 1) in vec3 color;\n"
                                         "out vec3 outColor;\n"
+                                        "uniform mat4 projection;\n"
+                                        "uniform mat4 view;\n"
                                         "void main() {\n"
-                                        "    gl_Position = vec4(pos, 1.0);\n"
-                                        "    outColor = color + vec3(pos.y * 0.5);\n"
+                                        "    gl_Position = projection * view * vec4(pos, 1.0f);\n"
+                                        "    outColor = color;\n"
                                         "}\0";
 
-static const char* fragmentShaderSource = "#version 420 core\n"
+static const char *fragmentShaderSource = "#version 420 core\n"
                                           "out vec4 fragColor;\n"
                                           "in vec3 outColor;\n"
                                           "void main() {\n"
@@ -112,12 +134,18 @@ void OGLWidget::initializeGL()
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    glUseProgram(shaderProgram);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)size().width()/size().height(), 0.01f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+                       1, GL_FALSE, glm::value_ptr(projection));
 }
 
 void OGLWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    auto time1 = (float)QDateTime::currentDateTime().time().msecsSinceStartOfDay();
     if (model == nullptr) { return; }
 
     auto time = (float)QDateTime::currentDateTime().time().msecsSinceStartOfDay();
@@ -125,15 +153,11 @@ void OGLWidget::paintGL()
     auto t = sin(time / 1000.f);
     auto t2 = cos(time / 1000.f);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(t2,t,5,0,0,0,0,1,0);
+    for (auto i = 0; i < MONKEYS_COUNT; i++) {
+    glBindVertexArray(vao[i]);
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo[i]);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -141,41 +165,24 @@ void OGLWidget::paintGL()
     glEnableVertexAttribArray(1);
 
     glUseProgram(shaderProgram);
-    glDrawElements(GL_TRIANGLES, eboSize, GL_UNSIGNED_INT, 0);
+    glm::mat4 view = glm::lookAt(glm::vec3(t2, t, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+                       1, GL_FALSE, glm::value_ptr(view));
 
-    /*auto verticies = model->getVerticies();
-    auto normals = model->getVertexNormals();
-    auto faces = model->getFaces();
-    auto generator = QRandomGenerator();
-    generator.seed(time);
-    for (auto &&face: faces) {
-        if (face.v.size() <= 3) {
-            glBegin(GL_TRIANGLES);
-        } else if (face.v.size() == 4) {
-            glBegin(GL_QUADS);
-        } else {
-            glBegin(GL_POLYGON);
-        }
-        for (int i = face.v.size() - 1; i >= 0; i--) {
-            auto vertex = verticies[face.v[i] - 1];
-            //auto normal = normals[face.vn[i] - 1];
-            glVertex3f(vertex.x, vertex.y, vertex.z);
-            auto r = normal.x;
-            auto g = normal.y;
-            auto b = normal.z;
-            glColor3f(r, g, b);
-        }
-        glEnd();
-    }*/
+    glDrawElements(GL_TRIANGLES, eboSize[i], GL_UNSIGNED_INT, 0);
+    }
+    auto time2 = (float)QDateTime::currentDateTime().time().msecsSinceStartOfDay();
+    auto dt = (int) round(time2 - time1);
+    label->setText(QString::fromStdString(std::to_string(dt)));
 }
 
 void OGLWidget::resizeGL(int w, int h)
 {
-    glViewport(0,0,w,h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45, (float)w/h, 0.01, 100.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(0,0,5,0,0,0,0,1,0);
+    glUseProgram(shaderProgram);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)w/h, 0.01f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"),
+                       1, GL_FALSE, glm::value_ptr(projection));
+    glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"),
+                       1, GL_FALSE, glm::value_ptr(view));
 }

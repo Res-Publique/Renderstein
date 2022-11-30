@@ -43,6 +43,7 @@ void MainWindow::handleButton() {
         stream.sync_with_stdio(false);
         auto parser = ObjParser();
         auto parserObj = parser.parse(stream);
+        stream.close();
         auto obj = std::make_shared<ObjModel>(parserObj);
         oglwidget->setModel(obj);
         oglwidget->startTimer();
