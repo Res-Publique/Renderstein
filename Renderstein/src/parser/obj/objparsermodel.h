@@ -1,11 +1,9 @@
 #ifndef OBJPARSERMODEL_H
 #define OBJPARSERMODEL_H
 
-
-#include "objface.h"
 #include "vec2generic.h"
 #include "vec3generic.h"
-
+#include "objface.h"
 #include <vector>
 
 class ObjParserModel

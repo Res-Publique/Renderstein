@@ -1,7 +1,7 @@
 #ifndef OBJPARSER_H
 #define OBJPARSER_H
 
-#include <objparsermodel.h>
+#include "objparsermodel.h"
 #include <istream>
 
 class ObjParser

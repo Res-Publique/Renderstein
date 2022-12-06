@@ -2,7 +2,6 @@
 #define OGLWIDGET_H
 
 #include "objmodel.h"
-#include "objparsermodel.h"
 
 #include <QWidget>
 #include <QOpenGLWidget>
